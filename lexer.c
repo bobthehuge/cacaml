@@ -78,7 +78,7 @@ int is_separator(char c)
 
 Token_Kind get_kind(char* buffer)
 {/*{{{*/
-    if(!(strcmp(buffer, "i32") && strcmp(buffer, "f32")))
+    if (!strcmp(buffer, "int"))
         return TOKEN_TYPE;
     else if (!strcmp(buffer, "let"))
         return TOKEN_LET;
