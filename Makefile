@@ -1,33 +1,29 @@
 CC = gcc
-CFLAGS = -Wall -Wextra
+CRELFLAGS = -std=c99
+CDEVFLAGS = -pedantic -Werror -Wall -Wextra -Wvla -Wshadow -g
 LDLIBS =
 
-SRC = common.c lexer.c main.c
+SRC = *.c
 OBJ = ${SRC:.c=.o}
 EXE = cacaml
 
-all: build run clean
+all: setrel compile
 
-build: comp link
+compile:
+	$(CC) -o $(EXE) $(CFLAGS) $(SRC)
+dev: setdev compile
+gdb: debug
+	gdb ./$(EXE)
 
-comp:
-	$(CC) $(CFLAGS) $(SRC) -c
+setdev:
+	$(eval CFLAGS := $(CDEVFLAGS))
+setrel:
+	$(eval CFLAGS := $(CRELFLAGS))
 
-link:
-	$(CC) $(CFLAGS) $(OBJ) -o $(EXE) 
+.PHONY: setdev setrel debug mop clean
 
-debug:
-	$(CC) -g $(CFLAGS) $(SRC) -c
-	$(CC) -g $(CFLAGS) $(OBJ) -o $(EXE)
-	${RM} ${OBJ}
+mop:
+	$(RM) $(OBJ)
 
-run:
-	./$(EXE)
-
-clean:
-	${RM} ${OBJ}
-
-cleaner:
-	${RM} ${OBJ}
-	${RM} ${EXE}
-# END
+clean: mop
+	$(RM) $(EXE)
