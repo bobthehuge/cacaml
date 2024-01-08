@@ -3,45 +3,40 @@
 
 #include <stdint.h>
 
-enum cml_tkind
+enum cmle_ast_kind
 {
-    T_NULL,
-    T_OPERAND,
-    T_FUNCTION,
+    AST_NULL,
+    AST_OPERAND,
+    AST_FUNCTION,
 };
 
-enum cml_callable_ids
+enum cmle_callable_ids
 {
     ADD,
 };
 
-typedef struct cml_token*(*cml_callable_fun)(struct cml_token *argv);
+typedef struct cmle_ast*(*cmle_callable_fun)(struct cmle_ast *argv);
 
-struct cml_i32
+struct cmle_i32
 {
-    uint32_t value;
+    int32_t value;
 };
 
-struct cml_callable
+struct cmle_callable
 {
     uint8_t id;
     size_t argc;
-    cml_callable_fun call;
+    cmle_callable_fun call;
 };
 
-struct cml_token
+struct cmle_ast
 {
-    enum cml_tkind kind;
+    enum cmle_tkind kind;
+    struct cmle_ast *kids;
+    size_t count;
     void *value;
 };
 
-struct cml_ast
-{
-    struct cml_token key;
-    struct cml_ast *kids;
-    size_t count;
-};
-
-size_t serialize_ast(struct cml_ast *ast, char **dst);
+size_t serialize_ast(struct cmle_ast *ast, char **dst);
 
 #endif
