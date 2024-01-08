@@ -3,8 +3,8 @@ CRELFLAGS = -std=c99
 CDEVFLAGS = -pedantic -Werror -Wall -Wextra -Wvla -Wshadow -g
 LDLIBS =
 
-SRC = *.c
-OBJ = ${SRC:.c=.o}
+SRC = `find . -name '*.c'`
+OBJ = `find . -name '*.o'`
 EXE = cacaml
 
 all: setrel compile
@@ -23,7 +23,7 @@ setrel:
 .PHONY: setdev setrel debug mop clean
 
 mop:
-	$(RM) $(OBJ)
+	$(ECHO) $(OBJ)
 
 clean: mop
-	$(RM) $(EXE)
+	$(ECHO) $(EXE)
