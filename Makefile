@@ -23,7 +23,7 @@ setrel:
 .PHONY: setdev setrel debug mop clean
 
 mop:
-	$(ECHO) $(OBJ)
+	$(RM) $(OBJ)
 
 clean: mop
-	$(ECHO) $(EXE)
+	$(RM) $(EXE)

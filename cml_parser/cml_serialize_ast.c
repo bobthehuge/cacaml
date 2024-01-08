@@ -4,38 +4,38 @@
 
 #include "../utils/bth_cstr.h"
 #include "../utils/cml_log.h"
-#include "../utils/cml_utils.h"
 
 #include "cml_parser.h"
 #include "cml_serialize_ast.h"
 
+#define MAGIC_SIZE 8
+
 struct bth_cstr *__cml_ast2cstr(struct cml_ast *ast)
 {
-    size_t size = getlongdigits(ast->kind)+2;
-    int32_t val;
+    size_t size = MAGIC_SIZE * 2 + 3;
+    char value[9] = {0};
 
-    if (ast->kind == AST_OPERAND)
+    if (ast->kind == CML_AST_OPERAND)
     {
         struct cmlenv_i32 *num = ast->value;
-        val = num->value;
+
+        int32_t val = num->value;
+        sprintf(value, "%08X", val);
     }
-    else if (ast->kind == AST_FUNCTION)
+    else if (ast->kind == CML_AST_FUNCTION)
     {
         struct cmlenv_callable *call = ast->value;
-        val = call->id;
+
+        uint32_t val = call->id;
+        sprintf(value, "%08X", val);
     }
     else
     {
         ERRX(1, "TODO: unsupported TokenKind serialization");
     }
 
-    size += getlongdigits(val);
-
     struct bth_cstr *cstr = bth_cstr_alloc(size);
-    /* *dst = malloc(size); */
-    /* (*dst)[size-2] = '\0'; */
-    /* BTH_CSTR_TA(cstr,1) = '\0'; */
-    sprintf(cstr->data, "(%u;%u", ast->kind, val);
+    sprintf(cstr->data, "(%08X;%s", ast->kind, value);
 
     return cstr;
 }
@@ -48,18 +48,11 @@ struct bth_cstr *cml_ast2cstr(struct cml_ast *ast)
     {
         struct bth_cstr *child = cml_ast2cstr(&ast->kids[i]);
         
-        /* *dst = realloc(*dst, size); */
-        /* strcat(*dst, child); */
-        /* free(child); */
         bth_cstr_cat(root, child);
         bth_cstr_free(child);
     }
 
-    /* (*dst)[size-2] = ')'; */
-    /* (*dst)[size-1] = '\0'; */
-    /* BTH_CSTR_TA(root, 1) = ')'; */
-    /* BTH_CSTR_TA(root, 0) = '\0'; */
-    /* bth_cstr_append(root, ")", 1); */
+    bth_cstr_append(root, ")", 1);
 
     return root;
 }

@@ -69,14 +69,14 @@ void bth_cstr_free(struct bth_cstr *cstr)
 
 void bth_cstr_resize(struct bth_cstr *cstr, size_t size)
 {
-    char *_new = realloc(cstr->data, size);
+    char *data = realloc(cstr->data, size);
 
-    if (_new == NULL && size != 0)
+    if (data == NULL && size != 0)
     {
         err(1, "Can't resize cstr to size '%zu'", size);
     }
 
-    cstr->data = _new;
+    cstr->data = data;
 }
 
 void bth_cstr_append(struct bth_cstr *cstr, char *src, size_t n)

@@ -5,14 +5,14 @@
 
 enum cml_ast_kind
 {
-    AST_NULL,
-    AST_OPERAND,
-    AST_FUNCTION,
+    CML_AST_NULL,
+    CML_AST_OPERAND,
+    CML_AST_FUNCTION,
 };
 
 enum cmlenv_callable_ids
 {
-    ADD,
+    CML_ENV_ADD,
 };
 
 typedef struct cml_ast*(*cmlenv_callable_fun)(struct cml_ast *argv);
@@ -24,14 +24,14 @@ struct cmlenv_i32
 
 struct cmlenv_callable
 {
-    uint8_t id;
+    uint32_t id;
     size_t argc;
     cmlenv_callable_fun call;
 };
 
 struct cml_ast
 {
-    enum cml_ast_kind kind;
+    uint8_t kind;
     struct cml_ast *kids;
     size_t count;
     void *value;
