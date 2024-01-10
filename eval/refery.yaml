@@ -64,7 +64,7 @@ testsuites:
     tests:
       - name: parse_empty_root
         args:
-          - "((1;42))"
+          - "((00000001;0000002A))"
         exit_code: 2
         stderr_mode: match
         stderr: >
@@ -72,75 +72,75 @@ testsuites:
 
       - name: parse_num
         args:
-          - "(1;42)"
+          - "(00000001;0000002A)"
         exit_code: 0
         stdout: "(1;42)\n"
 
       - name: parse_num_neg
         args:
-          - "(1;-42)"
+          - "(00000001;FFFFFFD6)"
         exit_code: 0
         stdout: "(1;-42)\n"
 
       - name: parse_invalid_num_empty
         args:
-          - "(1;)"
+          - "(00000001;)"
         exit_code: 1
         stderr_mode: match
         stderr: >
-          \[CML_FATAL\] ValueError(.*)
+          \[CML_FATAL\] SyntaxError(.*)
 
       - name: parse_invalid_num
         args:
-          - "(1;eqweq)"
+          - "(00000001;eqweq)"
         exit_code: 1
         stderr_mode: match
         stderr: >
-          \[CML_FATAL\] ValueError(.*)
+          \[CML_FATAL\] SyntaxError(.*)
 
       - name: parse_invalid_num2
         args:
-          - "(1;2;)"
+          - "(00000001;00000002;)"
         exit_code: 1
         stderr_mode: match
         stderr: > 
-          \[CML_FATAL\] ValueError(.*)
+          \[CML_FATAL\] SyntaxError(.*)
 
   - name: maths
     tests:
       - name: add_zero
         args:
-          - "(2;0(1;0)(1;0))"
+          - "(00000002;00000000(00000001;00000000)(00000001;00000000))"
         exit_code: 0
         stdout: "(1;0)\n"
 
       - name: add_one_two
         args:
-          - "(2;0(1;1)(1;2))"
+          - "(00000002;00000000(00000001;00000001)(00000001;00000002))"
         exit_code: 0
         stdout: "(1;3)\n"
 
       - name: add_two_one
         args:
-          - "(2;0(1;2)(1;1))"
+          - "(00000002;00000000(00000001;00000002)(00000001;00000001))"
         exit_code: 0
         stdout: "(1;3)\n"
 
       - name: add_neg_one
         args:
-          - "(2;0(1;-2)(1;1))"
+          - "(00000002;00000000(00000001;FFFFFFFE)(00000001;00000001))"
         exit_code: 0
         stdout: "(1;-1)\n"
 
       - name: add_one_neg
         args:
-          - "(2;0(1;1)(1;-42))"
+          - "(00000002;00000000(00000001;00000001)(00000001;FFFFFFD6))"
         exit_code: 0
         stdout: "(1;-41)\n"
 
       - name: add_neg_neg
         args:
-          - "(2;0(2;0(1;-42)(1;1))(1;-1))"
+          - "(00000002;00000000(00000002;00000000(00000001;FFFFFFD6)(00000001;00000001))(00000001;FFFFFFFF))"
         exit_code: 0
         stdout: "(1;-42)\n"
 

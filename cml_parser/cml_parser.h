@@ -1,7 +1,9 @@
-#ifndef CML_LEXER_H
-#define CML_LEXER_H
+#ifndef CML_PARSER_H
+#define CML_PARSER_H
 
 #include <stdint.h>
+
+#include "../cml_lexer/cml_lexer.h"
 
 enum cml_ast_kind
 {
@@ -31,10 +33,12 @@ struct cmlenv_callable
 
 struct cml_ast
 {
-    uint8_t kind;
+    uint32_t kind;
     struct cml_ast *kids;
     size_t count;
     void *value;
 };
+
+struct cml_ast *cml_build_ast(struct cml_token **tokens);
 
 #endif

@@ -13,21 +13,21 @@
 struct bth_cstr *__cml_ast2cstr(struct cml_ast *ast)
 {
     size_t size = MAGIC_SIZE * 2 + 3;
-    char value[9] = {0};
+    uint32_t value;
 
-    if (ast->kind == CML_AST_OPERAND)
+    if (ast->kind == CML_AST_NULL)
+    {
+        value = 0xdeadbeef;
+    }
+    else if (ast->kind == CML_AST_OPERAND)
     {
         struct cmlenv_i32 *num = ast->value;
-
-        int32_t val = num->value;
-        sprintf(value, "%08X", val);
+        value = num->value;
     }
     else if (ast->kind == CML_AST_FUNCTION)
     {
         struct cmlenv_callable *call = ast->value;
-
-        uint32_t val = call->id;
-        sprintf(value, "%08X", val);
+        value = call->id;
     }
     else
     {
@@ -35,7 +35,7 @@ struct bth_cstr *__cml_ast2cstr(struct cml_ast *ast)
     }
 
     struct bth_cstr *cstr = bth_cstr_alloc(size);
-    sprintf(cstr->data, "(%08X;%s", ast->kind, value);
+    sprintf(cstr->data, "(%08X;%08X", ast->kind, value);
 
     return cstr;
 }

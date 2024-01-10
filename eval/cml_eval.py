@@ -2,6 +2,16 @@ from cml_log import cml_exit
 from cml_tokens import CML_TokenKind, CML_Token
 from mytree import Tree
 
+def cml_ishexstr(s: str):
+    if len(s) == 0:
+        return False
+
+    for c in s:
+        if not c.isdigit() and c not in "ABCDEF":
+            return False
+
+    return True
+
 def cml_isnum(s: str):
     if len(s) > 0 and s[0] in '-,+':
         return s[1:].isdigit()
