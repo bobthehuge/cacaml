@@ -3,8 +3,8 @@ CRELFLAGS = -std=c99
 CDEVFLAGS = -pedantic -Werror -Wall -Wextra -Wvla -Wshadow -g
 LDLIBS =
 
-SRC = `find . -name '*.c'`
-OBJ = `find . -name '*.o'`
+SRC = `find . ../utils -name '*.c'`
+OBJ = `find . ../utils -name '*.o'`
 EXE = cacaml
 
 all: setrel compile

@@ -1,4 +1,4 @@
-from graphviz import Graph
+# from graphviz import Graph
 # import regex
 
 class Tree:
@@ -32,20 +32,20 @@ class Tree:
     def count(self):
         return len(self.kids)
 
-    def export(self, file: str):
-        g = Graph(file)
-        g.attr('node', height='.2')
-        q = []
-        q.append(self)
+    # def export(self, file: str):
+    #     g = Graph(file)
+    #     g.attr('node', height='.2')
+    #     q = []
+    #     q.append(self)
 
-        while q != []:
-            elt = q.pop(0)
-            g.body += str(elt.key)
-            for i in elt.kids:
-                g.body += f" {elt.key}--{i.key} "
-                q.append(i)
+    #     while q != []:
+    #         elt = q.pop(0)
+    #         g.body += str(elt.key)
+    #         for i in elt.kids:
+    #             g.body += f" {elt.key}--{i.key} "
+    #             q.append(i)
 
-        g.render(file)
+    #     g.render(file)
 
 def to_linear(tree: Tree):
     res = '('

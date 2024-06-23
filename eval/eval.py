@@ -14,7 +14,7 @@ def get_i32_obj(src: str) -> int:
     return str(struct.unpack('>i', bytes.fromhex(src))[0])
 
 def get_call_obj(src: str) -> CML_Callable:
-    if not cml_ishexstr(src) or len(src) != 8:
+    if not cml_ishexstr(src) or len(src) != 16:
         cml_exit("SyntaxError: no Callable found for '{}'".format(src),1)
 
     ident = struct.unpack('>I', bytes.fromhex(src))[0]
@@ -37,7 +37,7 @@ def deserialize_node_obj(src: str) -> CML_Token:
     g1, g2 = src.split(';', 1)
 
     kind = get_ident_obj(g1)
-    call = get_call_obj(g2) if kind == CML_TokenKind.FUNCTION else None
+    call = get_call_obj(g2) if kind == CML_TokenKind.BINOP else None
     label = get_i32_obj(g2)
 
     return CML_Token(kind=kind, label=label, call=call)

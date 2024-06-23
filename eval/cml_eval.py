@@ -22,11 +22,11 @@ def cml_eval_node(node: Tree) -> None:
         case CML_TokenKind.NULL:
             return
 
-        case CML_TokenKind.OPERAND:
+        case CML_TokenKind.I32:
             if not cml_isnum(node.key.label):
                 cml_exit("ValueError: Invalid int representation '{}'".format(node.key.label))
 
-        case CML_TokenKind.FUNCTION:
+        case CML_TokenKind.BINOP:
             cml_callable = node.key.call
 
             if node.count() != cml_callable.argc:
