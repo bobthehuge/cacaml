@@ -4,6 +4,7 @@
 #include <err.h>
 #include <stdio.h>
 
+
 #ifndef NOLOG
 #define LOG(...) \
 {\
