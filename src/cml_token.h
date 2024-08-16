@@ -38,8 +38,5 @@ struct cml_lexer
 };
 
 const char *cml_tkind2str(enum cml_tkind kind);
-int cml_lexer_from_file(struct cml_lexer *lex, char *path);
-void cml_lexer_destroy(struct cml_lexer *lex);
-struct cml_token cml_lexer_next_token(struct cml_lexer *lex);
 
 #endif
