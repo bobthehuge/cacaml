@@ -1,8 +1,10 @@
+#include <cml_token.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "common.h"
+#include "../utils/bth_dynarray.h"
 #include "../utils/bth_log.h"
 #include "../utils/bth_salloc.h"
 
@@ -181,4 +183,20 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
 
         return (struct cml_token){.kind = TK_INVALID, .value = s};
     }
+}
+
+struct bth_dynarray cml_lexer_lexall(struct cml_lexer *lex)
+{
+    struct bth_dynarray da = bth_dynarray_init(sizeof(struct cml_token), 0);
+    
+    struct cml_token tok = {0};
+    int i = 0;
+
+    do
+    {
+        tok = cml_lexer_next_token(lex);
+        bth_dynarray_append(&da, &tok);
+    } while (tok.kind != END);
+    
+    return da;
 }

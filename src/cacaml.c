@@ -9,7 +9,14 @@
 #include "../utils/bth_log.h"
 #define BTH_SALLOC_IMPLEMENTATION
 #include "../utils/bth_salloc.h"
+#define BTH_DYNARRAY_IMPLEMENTATION
+#include "../utils/bth_dynarray.h"
 
+struct cml_program_node
+{
+    const char *filename;
+    struct bth_dynarray nodes;
+};
 
 int main()
 {
@@ -22,17 +29,18 @@ int main()
     escprints(lex.buf);
     printf("\n");
 
-    struct cml_token tok = {0};
+    struct bth_dynarray tokens = cml_lexer_lexall(&lex);
 
-    do
+    for (uint32_t i = 0; i < tokens.len; i++)
     {
-        tok = cml_lexer_next_token(&lex);
+        struct cml_token tok;
+        bth_dynarray_get(&tokens, i, &tok);
         LOGX(
             "{ .kind: %s, .value: \"%s\" }",
             cml_tkind2str(tok.kind),
             tok.value
         );
-    } while (tok.kind != END);
+    }
     
     cml_lexer_destroy(&lex);
     return 0;

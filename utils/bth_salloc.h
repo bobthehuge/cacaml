@@ -5,6 +5,8 @@
 
 void *smalloc(size_t size);
 
+#endif
+
 #ifdef BTH_SALLOC_IMPLEMENTATION
 #include <err.h>
 
@@ -19,7 +21,5 @@ void *smalloc(size_t size)
 }
 
 // TODO: Add calloc and realloc
-
-#endif
 
 #endif /* ! */
