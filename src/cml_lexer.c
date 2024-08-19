@@ -14,7 +14,10 @@
 
 static const struct bth_cstr CML_KW_LIST[CML_KW_COUNT] = {
     CML_KEYWORD("let"),
+    CML_KEYWORD("in"),
     CML_KEYWORD("if"),
+    CML_KEYWORD("then"),
+    CML_KEYWORD("else"),
 };
 
 int cml_lexer_from_file(struct cml_lexer *lex, char *path)
@@ -126,6 +129,11 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
     {
         cml_lexer_next_char(lex);
         return (struct cml_token){.kind = TK_ADD, .value = NULL};
+    }
+    else if (lex->ch == '*')
+    {
+        cml_lexer_next_char(lex);
+        return (struct cml_token){.kind = TK_MUL, .value = NULL};
     }
     else if (lex->ch == '=')
     {

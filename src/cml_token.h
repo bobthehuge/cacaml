@@ -15,10 +15,14 @@ enum cml_tkind
     TK_INVALID,
     TK_INT32,
     TK_ADD,
+    TK_MUL,
     TK_EQ,
     TK_LET, // should ALWAYS be the FIRST keyword kind
+    TK_IN,
     TK_IF,
-    TK_IDENT, // should ALWAYS be AFTER the LAST keyword kind
+    TK_THEN,
+    TK_ELSE,
+    TK_IDENT, // should ALWAYS be AFTER the last keyword kind
 };
 
 struct cml_token
