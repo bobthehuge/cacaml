@@ -9,6 +9,8 @@
 #define CML_TKIND_KW_OFFSET TK_LET
 #define CML_KW_COUNT TK_IDENT - TK_LET
 
+#define TOKEN_EMPTY {.kind = END, .value = NULL}
+
 enum cml_tkind
 {
     END = 0, // should ALWAYS be the first kind

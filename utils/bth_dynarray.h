@@ -101,7 +101,8 @@ void bth_dynarray_get(struct bth_dynarray *da, unsigned int index, void *e)
     if (index >= da->len)
         errx(1, "Index out of bound of bth_dynarray");
 
-    memcpy(e, da->items + index * da->isize, da->isize);
+    char *start = da->items;
+    memcpy(e, start + index * da->isize, da->isize);
 }
 
 void bth_dynarray_set(struct bth_dynarray *da, unsigned int index, void *e)
@@ -109,7 +110,8 @@ void bth_dynarray_set(struct bth_dynarray *da, unsigned int index, void *e)
     if (index >= da->len)
         errx(1, "Index out of bound of bth_dynarray");
 
-    memcpy(da->items + index * da->isize, e, da->isize);
+    char *start = da->items;
+    memcpy(start + index * da->isize, e, da->isize);
 }
 
 void bth_dynarray_append(struct bth_dynarray *da, void *e)

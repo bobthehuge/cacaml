@@ -22,7 +22,9 @@ enum cml_ikind
 
 enum cml_ekind
 {
-    EK_VALUE,
+    EK_NONE,
+    EK_INT32,
+    EK_IDENT,
     EK_UNOP,
     EK_BINOP,
 };
@@ -30,7 +32,7 @@ enum cml_ekind
 struct cml_info_node
 {
     char *value;
-    uint32_t line;
+    uint32_t row;
     uint32_t col;
 };
 
@@ -59,10 +61,16 @@ struct cml_expr_node
     };
 };
 
+struct cml_block_node
+{
+    const char *type;
+    struct bth_dynarray exprs;
+};
+
 struct cml_decl_node
 {
     struct cml_info_node name;
-    struct cml_expr_node value;
+    struct cml_expr_node body;
 };
 
 struct cml_cond_node
@@ -105,7 +113,7 @@ void cml_parser_current(struct cml_parser *pa, struct cml_token *p)
         return;
     }
 
-    bth_dynarray_get(&pa->tokens, pa->idx, &p);
+    bth_dynarray_get(&pa->tokens, pa->idx, p);
 }
 
 void cml_parser_peek(struct cml_parser *pa, struct cml_token *p)
@@ -132,42 +140,116 @@ void cml_parser_next(struct cml_parser *pa)
     cml_parser_current(pa, &pa->curr);
 }
 
-void cml_parse_binop_sides(struct cml_parser *pa, struct cml_binop_node *bnode)
+void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr);
+
+void cml_parse_factor(struct cml_parser *pa, struct cml_expr_node *fact)
 {
-    struct cml_token tok = {0};
+    if (pa->curr.kind == TK_INT32)
+    {
+        fact->kind = EK_INT32;
+        fact->int32.value = pa->curr.value;
+    }
+    else if (pa->curr.kind == TK_IDENT)
+    {
+        fact->kind = EK_IDENT;
+        fact->ident.value = pa->curr.value;
+    }
+    else
+    {
+        ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
+    }
 
-    if (pa->idx == 0)
-        ERROR(1, "Missing operand for %s", bnode->op.value);
-
-    cml_parser_peek(pa, &tok);
-}
-
-void cml_parse_factor(struct cml_parser *pa, struct cml_info_node *fact)
-{
+    cml_parser_next(pa);
 }
 
 void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
 {
+    // struct cml_token next;
+
+    struct cml_expr_node *lhs = smalloc(sizeof(struct cml_expr_node));
+    cml_parse_factor(pa, lhs);
+
+    // cml_parser_peek(pa, &next);
+
+    // Term = Factor | Factor (* | /) Expr
+    if (pa->curr.kind == TK_MUL)
+    {
+        // cml_parser_next(pa); // TK_MUL | TK_DIV
+        cml_parser_next(pa); // rhs Expr
+
+        struct cml_expr_node *rhs = smalloc(sizeof(struct cml_expr_node));
+        cml_parse_expr(pa, rhs);
+
+        struct cml_info_node op = {
+            .value = "*",
+        };
+        
+        // expr->type = TODO
+        term->op = op;
+        term->lhs = lhs;
+        term->rhs = rhs;
+    }
+    else
+    {
+        term->op.value = NULL;
+        term->lhs = lhs;
+    }
 }
 
 void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr)
 {
-    struct cml_token next = {0};
-    cml_parser_peek(pa, &next);
+    // struct cml_token next;
 
-    if (next.kind == TK_ADD)
+    expr->type = NULL;
+    expr->kind = EK_NONE;
+
+    struct cml_expr_node *lhs = smalloc(sizeof(struct cml_expr_node));
+    cml_parse_term(pa, &lhs->binop);
+
+    // cml_parser_peek(pa, &next);
+
+    // Expr = Term | Term (+ | -) Expr
+    if (pa->curr.kind == TK_ADD)
+    {
+        // cml_parser_next(pa); // TK_ADD | TK_SUB
+        cml_parser_next(pa); // rhs Expr
+
+        struct cml_expr_node *rhs = smalloc(sizeof(struct cml_expr_node));
+        cml_parse_expr(pa, rhs);
+
+        struct cml_info_node op = {
+            .value = "+",
+        };
+        
+        struct cml_binop_node root = {
+            .lhs = lhs,
+            .op = op,
+            .rhs = rhs
+        };
+
+        // TODO: expr->type = ??
+        expr->kind = EK_BINOP;
+        expr->binop = root;
+    }
+    else
+    {
+        if (lhs->binop.op.value != NULL)
+            *expr = *lhs;
+        else
+            *expr = *lhs->binop.lhs;
+    }
 }
 
 void cml_parse_decl(struct cml_parser *pa, struct cml_instr_node *inode)
 {
-    struct cml_decl_node node = {0};
+    struct cml_decl_node node;
 
     cml_parser_next(pa);
     if (pa->curr.kind != TK_IDENT)
         ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
 
     node.name.value = pa->curr.value;
-    node.name.line = 0;
+    node.name.row = 0;
     node.name.col = 0;
 
     cml_parser_next(pa);
@@ -175,9 +257,16 @@ void cml_parse_decl(struct cml_parser *pa, struct cml_instr_node *inode)
         ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
 
     cml_parser_next(pa);
-    cml_parse_expr(pa, &node.value);
+    cml_parse_expr(pa, &node.body);
     
-    inode->kind = pa->curr.kind == TK_IN ? IK_LOCAL_DECL : IK_DECL;
+    inode->kind = IK_DECL;
+
+    if (pa->curr.kind == TK_IN)
+    {
+        cml_parser_next(pa);
+        inode->kind = IK_LOCAL_DECL;
+    }
+    
     inode->decl = node;
 }
 
@@ -191,7 +280,8 @@ void cml_parse_instr(struct cml_parser *pa, struct cml_instr_node *inode)
         break;
     case TK_IF:
         // IF <EXPR> THEN <INSTR> ELSE? <INSTR?>
-        cml_parse_cond(pa, inode);
+        // cml_parse_cond(pa, inode);
+        TODO();
         break;
     case TK_IDENT: case TK_INT32: case TK_ADD:
         // return associated expr
@@ -212,9 +302,48 @@ void cml_parse_program(struct cml_parser *pa, struct cml_program_node *prog)
 
     while (pa->curr.kind != END)
     {
-        struct cml_instr_node inode = {0};
+        struct cml_instr_node inode;
         cml_parse_instr(pa, &inode);
         bth_dynarray_append(&prog->instrs, &inode);
+    }
+}
+
+void cml_print_expr(struct cml_expr_node *expr)
+{
+    fputs("", stdout);
+    switch (expr->kind)
+    {
+    case EK_BINOP:
+        break;
+    case EK_IDENT:
+        break;
+    case EK_INT32:
+        break;
+    case EK_UNOP:
+        break;
+    case EK_NONE:
+        break;
+    }
+}
+
+void cml_print_program(struct cml_program_node *prog)
+{
+    struct cml_instr_node instr;
+
+    for (uint32_t i = 0; i < prog->instrs.len; i++)
+    {
+        bth_dynarray_get(&prog->instrs, i, &instr);
+
+        switch (instr.kind)
+        {
+        case IK_DECL: case IK_LOCAL_DECL:
+            break;
+        case IK_COND:
+            break;
+        case IK_EXPR:
+            cml_print_expr(&instr.expr);
+            break;
+        }
     }
 }
 
@@ -222,16 +351,16 @@ int main()
 {
     struct cml_lexer lex;
 
-    int err = cml_lexer_from_file(&lex, "sample.ml");
-    if (err)
-        ERRX(1, "Unsuccessful lexer initialisation");
+    int code = cml_lexer_from_file(&lex, "sample.ml");
+    if (code)
+        ERROR(1, "Unsuccessful lexer initialisation");
 
     escprints(lex.buf);
     printf("\n");
 
     struct cml_parser pa = {
         .tokens = cml_lexer_lexall(&lex),
-        .curr = {0},
+        // .curr = TOKEN_EMPTY,
         .idx = 0,
     };
 
@@ -248,7 +377,7 @@ int main()
 
     cml_parser_init(&pa);
 
-    struct cml_program_node prog = {0};
+    struct cml_program_node prog;
     cml_parse_program(&pa, &prog);
     
     cml_lexer_destroy(&lex);

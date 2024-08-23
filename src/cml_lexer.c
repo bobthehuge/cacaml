@@ -85,8 +85,6 @@ static inline void cml_lexer_next_char(struct cml_lexer *lex)
 
 static inline void cml_lexer_skip_spaces(struct cml_lexer *lex)
 {
-    char c;
-
     while (lex->ch != EOF && isspace(lex->ch))
     {
         cml_lexer_next_char(lex);   
@@ -115,6 +113,25 @@ static inline void cml_lexer_skip(struct cml_lexer *lex, uint32_t n)
     lex->ch = lex->buf[lex->read_pos];
 }
 
+static inline void cml_lexer_skip_comment(struct cml_lexer *lex)
+{
+    cml_lexer_skip(lex, 2);
+
+    char peek = cml_lexer_peek(lex);
+
+    while (peek != EOF && (lex->ch != '*' || peek != ')'))
+    {
+        cml_lexer_next_char(lex);
+        peek = cml_lexer_peek(lex);
+    }
+    
+    if (peek == EOF)
+        ERROR(1, "Non closing comment detected");
+
+    cml_lexer_skip(lex, 2);
+    cml_lexer_skip_spaces(lex);
+}
+
 struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
 {
     uint32_t kw_idx = 0;
@@ -124,6 +141,17 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
     {
         cml_lexer_next_char(lex);
         return (struct cml_token){.kind = END, .value = NULL};
+    }
+    else if (lex->ch == '(')
+    {
+        char peek = cml_lexer_peek(lex);
+
+        if (peek == '*')
+            cml_lexer_skip_comment(lex);
+
+        // TODO: maybe add TK_COMMENT
+
+        return cml_lexer_next_token(lex);
     }
     else if (lex->ch == '+')
     {
@@ -198,7 +226,6 @@ struct bth_dynarray cml_lexer_lexall(struct cml_lexer *lex)
     struct bth_dynarray da = bth_dynarray_init(sizeof(struct cml_token), 0);
     
     struct cml_token tok = {0};
-    int i = 0;
 
     do
     {

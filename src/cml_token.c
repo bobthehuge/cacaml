@@ -19,4 +19,6 @@ const char *cml_tkind2str(enum cml_tkind kind)
     case TK_ELSE: return STRINGIFY(TK_ELSE);
     case TK_IDENT: return STRINGIFY(TK_IDENT);
     }
+
+    return "";
 }
