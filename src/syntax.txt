@@ -1,0 +1,12 @@
+expr        ::=  value-name
+            |    constant
+            |    ( expr )
+            |    let let-binding in expr
+            |    expr infix-op expr
+
+constant    ::=  int32
+
+let-binding ::=  expr
+            |    value-name = expr
+
+value-name  ::=  lower_case-ident

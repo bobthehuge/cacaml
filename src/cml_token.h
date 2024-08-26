@@ -9,7 +9,7 @@
 #define CML_TKIND_KW_OFFSET TK_LET
 #define CML_KW_COUNT TK_IDENT - TK_LET
 
-#define TOKEN_EMPTY {.kind = END, .value = NULL}
+#define TOKEN_EMPTY {.row = 0, .col = 0, .kind = END, .value = NULL}
 
 enum cml_tkind
 {
@@ -29,18 +29,10 @@ enum cml_tkind
 
 struct cml_token
 {
+    uint32_t row;
+    uint32_t col;
     enum cml_tkind kind;
     char *value;
-};
-
-struct cml_lexer
-{
-    char *buf_path;
-    char *buf;
-    uint32_t buf_len;
-    uint32_t pos;
-    uint32_t read_pos;
-    char ch;
 };
 
 const char *cml_tkind2str(enum cml_tkind kind);

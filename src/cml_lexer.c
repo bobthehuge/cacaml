@@ -51,6 +51,8 @@ int cml_lexer_from_file(struct cml_lexer *lex, char *path)
     lex->pos = 0;
     lex->read_pos = 0;
     lex->ch = d[0];
+    lex->row = 1;
+    lex->col = 1;
 
     return 0;
 }
@@ -78,6 +80,13 @@ static inline void cml_lexer_next_char(struct cml_lexer *lex)
     {
         lex->pos = lex->read_pos;
         lex->read_pos++;
+        lex->col++;
+
+        if (lex->ch == '\n')
+        {
+            lex->row++;
+            lex->col = 1;
+        }
     }
 
     lex->ch = c;
@@ -108,9 +117,8 @@ static inline int cml_get_keyword(char *pos, uint32_t *res)
 
 static inline void cml_lexer_skip(struct cml_lexer *lex, uint32_t n)
 {
-    lex->read_pos += n;
-    lex->pos = lex->read_pos - 1;
-    lex->ch = lex->buf[lex->read_pos];
+    for (uint32_t i = 0; i < n; i++)
+        cml_lexer_next_char(lex);
 }
 
 static inline void cml_lexer_skip_comment(struct cml_lexer *lex)
@@ -136,11 +144,21 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
 {
     uint32_t kw_idx = 0;
     cml_lexer_skip_spaces(lex);
+    uint32_t col = lex->col;
+    uint32_t row = lex->row;
 
     if (lex->ch == EOF)
     {
         cml_lexer_next_char(lex);
-        return (struct cml_token){.kind = END, .value = NULL};
+
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = END,
+            .value = NULL
+        };
+
+        return tok;
     }
     else if (lex->ch == '(')
     {
@@ -156,26 +174,54 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
     else if (lex->ch == '+')
     {
         cml_lexer_next_char(lex);
-        return (struct cml_token){.kind = TK_ADD, .value = NULL};
+
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_ADD,
+            .value = NULL
+        };
+
+        return tok;
     }
     else if (lex->ch == '*')
     {
         cml_lexer_next_char(lex);
-        return (struct cml_token){.kind = TK_MUL, .value = NULL};
+
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_MUL,
+            .value = NULL
+        };
+
+        return tok;
     }
     else if (lex->ch == '=')
     {
         cml_lexer_next_char(lex);
-        return (struct cml_token){.kind = TK_EQ, .value = NULL};
+
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_EQ,
+            .value = NULL
+        };
+
+        return tok;
     }
     else if (cml_get_keyword(lex->buf + lex->read_pos, &kw_idx))
     {
         cml_lexer_skip(lex, CML_KW_LIST[kw_idx].len);
 
-        return (struct cml_token) {
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
             .kind = CML_TKIND_KW_OFFSET + kw_idx,
             .value = NULL
         };
+
+        return tok;
     }
     else if (isdigit(lex->ch))
     {
@@ -191,7 +237,14 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
         memcpy(s, lex->buf + start, count);
         s[count] = 0;
 
-        return (struct cml_token){.kind = TK_INT32, .value = s};
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_INT32,
+            .value = s
+        };
+
+        return tok;
     }
     else if (isalnum(lex->ch) || lex->ch == '_')
     {
@@ -207,7 +260,14 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
         memcpy(s, lex->buf + start, count);
         s[count] = 0;
 
-        return (struct cml_token){.kind = TK_IDENT, .value = s};
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_IDENT,
+            .value = s
+        };
+
+        return tok;
     }
     else
     {
@@ -217,7 +277,14 @@ struct cml_token cml_lexer_next_token(struct cml_lexer *lex)
         s[1] = 0;
         cml_lexer_next_char(lex);
 
-        return (struct cml_token){.kind = TK_INVALID, .value = s};
+        struct cml_token tok = {
+            .row = row,
+            .col = col,
+            .kind = TK_INVALID,
+            .value = s
+        };
+
+        return tok;
     }
 }
 

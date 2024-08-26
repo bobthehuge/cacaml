@@ -11,9 +11,14 @@ all: setrel compile
 
 compile:
 	$(CC) -o $(EXE) $(CFLAGS) $(SRC)
+rel: setrel compile
 dev: setdev compile
-gdb: debug
+run:
+	./$(EXE)
+gdb: dev
 	gdb ./$(EXE)
+memcheck: dev
+	valgrind --leak-check=full -s ./$(EXE)
 
 setdev:
 	$(eval CFLAGS := $(CDEVFLAGS))

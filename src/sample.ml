@@ -2,9 +2,9 @@
 (* 1 * 3 + 2 *)
 (* 2 * 3 + 1 *)
 
-(* let a = 56 + 24 *)
+let a = 56 + 24
 
-let a = let b = 5 in b + 42
+(* let a = let b = 5 in b + 42 *)
 
 (* let err = *) 
   (* let a = 42 in *)

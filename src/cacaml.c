@@ -13,25 +13,29 @@
 #define BTH_DYNARRAY_IMPLEMENTATION
 #include "../utils/bth_dynarray.h"
 
+#define ERR_UNEXP_TOKEN_FMT "Unexpected token of kind %s at (%u, %u)"
+#define ERR_UNEXP_TOKEN(t) \
+    ERROR(\
+        1,\
+        ERR_UNEXP_TOKEN_FMT,\
+        cml_tkind2str((t)->kind),\
+        (t)->row,\
+        (t)->col\
+    );
+
 enum cml_type
 {
     UNRESOLVED,
     INT32,
 };
 
-enum cml_ikind
-{
-    IK_DECL,
-    IK_LOCAL_DECL,
-    IK_COND,
-    IK_EXPR,
-};
-
 enum cml_ekind
 {
     EK_NONE,
-    EK_INT32,
-    EK_IDENT,
+    EK_VALUE_NAME,
+    EK_CONSTANT,
+    EK_EXPR,
+    EK_LET,
     EK_UNOP,
     EK_BINOP,
 };
@@ -41,8 +45,10 @@ const char *cml_ekind2str(enum cml_ekind v)
     switch (v)
     {
     case EK_NONE: return STRINGIFY(EK_NONE);
-    case EK_INT32: return STRINGIFY(EK_INT32);
-    case EK_IDENT: return STRINGIFY(EK_IDENT);
+    case EK_VALUE_NAME: return STRINGIFY(EK_VALUE_NAME);
+    case EK_CONSTANT: return STRINGIFY(EK_CONSTANT);
+    case EK_EXPR: return STRINGIFY(EK_EXPR);
+    case EK_LET: return STRINGIFY(EK_LET);
     case EK_UNOP: return STRINGIFY(EK_UNOP);
     case EK_BINOP: return STRINGIFY(EK_BINOP);
     }
@@ -86,11 +92,12 @@ struct cml_expr_node
     const char *type;
     enum cml_ekind kind;
     union {
-        struct cml_info_node *ident;
+        struct cml_info_node *value;
         struct cml_info_node *int32;
+        struct cml_expr_node *expr;
+        struct cml_let_node *let;
         // struct cml_unop_node unop;
         struct cml_binop_node *binop;
-        // struct cml_decl_node *decl;
     };
 };
 
@@ -100,7 +107,7 @@ struct cml_block_node
     struct bth_dynarray exprs;
 };
 
-struct cml_decl_node
+struct cml_let_node
 {
     struct cml_info_node name;
     struct cml_expr_node body;
@@ -114,20 +121,10 @@ struct cml_cond_node
     struct cml_expr_node b_else;
 };
 
-struct cml_instr_node
-{
-    enum cml_ikind kind;
-    union {
-        struct cml_decl_node decl;
-        struct cml_cond_node cond;
-        struct cml_expr_node expr;
-    };
-};
-
 struct cml_program_node
 {
     const char *filename;
-    struct bth_dynarray instrs;
+    struct bth_dynarray exprs;
 };
 
 struct cml_parser
@@ -158,11 +155,12 @@ void cml_parser_peek(struct cml_parser *pa, struct cml_token *p)
         return;
     }
 
-    bth_dynarray_get(&pa->tokens, pa->idx + 1, &p);
+    bth_dynarray_get(&pa->tokens, pa->idx + 1, p);
 }
 
 void cml_parser_init(struct cml_parser *pa)
 {
+    pa->idx = 0;
     cml_parser_current(pa, &pa->curr);
 }
 
@@ -181,23 +179,23 @@ void cml_parse_factor(struct cml_parser *pa, struct cml_expr_node *fact)
     {
         fact->int32 = smalloc(sizeof(struct cml_info_node));
         fact->type = cml_type2str(INT32);
-        fact->kind = EK_INT32;
+        fact->kind = EK_CONSTANT;
         fact->int32->value = pa->curr.value;
-        fact->int32->row = 0;
-        fact->int32->col = 0;
+        fact->int32->row = pa->curr.row;
+        fact->int32->col = pa->curr.col;
     }
     else if (pa->curr.kind == TK_IDENT)
     {
-        fact->ident = smalloc(sizeof(struct cml_info_node));
+        fact->value = smalloc(sizeof(struct cml_info_node));
         fact->type = "unresolved";
-        fact->kind = EK_IDENT;
-        fact->ident->value = pa->curr.value;
-        fact->int32->row = 0;
-        fact->int32->col = 0;
+        fact->kind = EK_VALUE_NAME;
+        fact->value->value = pa->curr.value;
+        fact->value->row = pa->curr.row;
+        fact->value->col = pa->curr.col;
     }
     else
     {
-        ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
+        ERR_UNEXP_TOKEN(&pa->curr);
     }
 
     cml_parser_next(pa);
@@ -247,7 +245,7 @@ void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
 // Term = Factor (*/% Term)*
 // Factor = Literal | (Expr)
 
-void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr)
+void cml_parse_binop(struct cml_parser *pa, struct cml_expr_node *expr)
 {
     expr->type = cml_type2str(UNRESOLVED);
 
@@ -269,14 +267,17 @@ void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr)
     // Expr = Term | Term (+ | -) Expr
     if (pa->curr.kind == TK_ADD)
     {
+        struct cml_info_node op = {
+            .value = "+",
+            .row = pa->curr.row,
+            .col = pa->curr.col
+        };
+
         cml_parser_next(pa); // rhs Expr
 
         struct cml_expr_node *rhs = smalloc(sizeof(struct cml_expr_node));
-        cml_parse_expr(pa, rhs);
+        cml_parse_binop(pa, rhs);
 
-        struct cml_info_node op = {
-            .value = "+",
-        };
         
         struct cml_binop_node root = {
             .lhs = lhs,
@@ -296,76 +297,76 @@ void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr)
     }
 }
 
-void cml_parse_decl(struct cml_parser *pa, struct cml_instr_node *inode)
+void cml_parse_let(struct cml_parser *pa, struct cml_expr_node *root)
 {
-    struct cml_decl_node node;
+    struct cml_let_node *let = smalloc(sizeof(struct cml_let_node));
+
+    let->name.row = pa->curr.row;
+    let->name.col = pa->curr.col;
 
     cml_parser_next(pa);
     if (pa->curr.kind != TK_IDENT)
-        ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
+        ERR_UNEXP_TOKEN(&pa->curr);
 
-    node.name.value = pa->curr.value;
-    node.name.row = 0;
-    node.name.col = 0;
+    let->name.value = pa->curr.value;
 
     cml_parser_next(pa);
     if (pa->curr.kind != TK_EQ)
-        ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
+        ERR_UNEXP_TOKEN(&pa->curr);
 
     cml_parser_next(pa);
-    cml_parse_expr(pa, &node.body);
-    
-    inode->kind = IK_DECL;
-
-    if (pa->curr.kind == TK_IN)
+    if (pa->curr.kind == TK_LET)
     {
-        cml_parser_next(pa);
-        inode->kind = IK_LOCAL_DECL;
+        // struct cml_let_node *let = smalloc(sizeof(struct cml_let_node));
     }
-    
-    inode->decl = node;
+    else
+    {
+        cml_parse_expr(pa, &let->body);
+        root->kind = EK_LET;
+        root->let = let;
+    }
+   
 }
 
-void cml_parse_instr(struct cml_parser *pa, struct cml_instr_node *inode)
+void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *r)
 {
-    switch (pa->curr.kind)
+    struct cml_token next;
+    cml_parser_peek(pa, &next);
+
+    if (next.kind == TK_ADD || next.kind == TK_MUL)
     {
-    case TK_LET:
-        // LET IDENT EQ <EXPR> IN?
-        cml_parse_decl(pa, inode);
-        break;
-    case TK_IF:
-        // IF <EXPR> THEN <INSTR> ELSE? <INSTR?>
-        // cml_parse_cond(pa, inode);
-        TODO();
-        break;
-    case TK_IDENT: case TK_INT32: case TK_ADD:
-        // return associated expr
-        inode->kind = IK_EXPR;
-        cml_parse_expr(pa, &inode->expr);
-        break;
-    case END:
-        // do nothing
-        break;
-    default:
-        ERROR(1, "Unexpected token of kind %s", cml_tkind2str(pa->curr.kind));
-        break;
+        cml_parse_binop(pa, r);
+    }
+    else
+    {
+        if (pa->curr.kind == TK_IDENT || pa->curr.kind == TK_INT32)
+        {
+            cml_parse_factor(pa, r);
+        }
+        else if (pa->curr.kind == TK_LET)
+        {
+            cml_parse_let(pa, r);
+        }
+        else
+        {
+            ERR_UNEXP_TOKEN(&pa->curr);
+        }
     }
 }
 
 void cml_parse_program(struct cml_parser *pa, struct cml_program_node *prog)
 {
-    prog->instrs = bth_dynarray_init(sizeof(struct cml_instr_node), 0);
+    prog->exprs = bth_dynarray_init(sizeof(struct cml_expr_node), 0);
 
     while (pa->curr.kind != END)
     {
-        struct cml_instr_node inode;
-        cml_parse_instr(pa, &inode);
-        bth_dynarray_append(&prog->instrs, &inode);
+        struct cml_expr_node expr;
+        cml_parse_expr(pa, &expr);
+        bth_dynarray_append(&prog->exprs, &expr);
     }
 }
 
-void nprintc(char c, unsigned int n)
+void nputchar(char c, unsigned int n)
 {
     for (uint32_t i = 0; i < n; i++)
         putchar(c);
@@ -373,121 +374,113 @@ void nprintc(char c, unsigned int n)
 
 void cml_print_expr(struct cml_expr_node *expr, uint32_t depth);
 
-void cml_print_binop(struct cml_binop_node *binop, uint32_t depth)
+void __print_binop(struct cml_binop_node *binop, uint32_t depth)
 {
     const char *v = binop->op.value;
     uint32_t l = binop->op.row;
     uint32_t c = binop->op.col;
+    
+    nputchar(' ', depth * 2);
+    printf("EK_BINOP: (%u, %u) \"%s\" {\n", l, c, v);
 
-    printf("(l: %u, c:%u) \"%s\" {\n", l, c, v);
     cml_print_expr(binop->lhs, depth + 1);
     cml_print_expr(binop->rhs, depth + 1);
-    nprintc(' ', depth * 2);
+
+    nputchar(' ', depth * 2);
+    printf("}\n");
+}
+
+void __print_info(struct cml_info_node *r, uint32_t depth)
+{
+    nputchar(' ', depth * 2);
+    printf("EK_INFO: (%u, %u) \"%s\"\n", r->row, r->col, r->value);
+}
+
+void __print_let(struct cml_let_node *r, uint32_t depth)
+{
+    printf(
+        "EK_LET: (%u, %u) \"%s\" -> %s {\n",
+        r->name.row,
+        r->name.col,
+        r->name.value,
+        r->body.type
+    );
+
+    cml_print_expr(&r->body, depth + 1);
     printf("}\n");
 }
 
 void cml_print_expr(struct cml_expr_node *expr, uint32_t depth)
 {
-    nprintc(' ', depth * 2);
-
-    printf(
-        "IK_EXPR -> %s {\n",
-        expr->type
-    );
-
-    nprintc(' ', (depth + 1) * 2);
-    
-    printf(
-        "%s: ",
-        cml_ekind2str(expr->kind)
-    );
-
     switch (expr->kind)
     {
-    case EK_BINOP:
-        cml_print_binop(expr->binop, depth+1);
-        break;
-    case EK_IDENT: case EK_INT32:
-    {
-        const char *v;
-        uint32_t l;
-        uint32_t c;
-        
-        if (expr->kind == EK_IDENT)
-        {
-            v = expr->ident->value;
-            l = expr->ident->row;
-            c = expr->ident->col;
-        }
-        else
-        {
-            v = expr->int32->value;
-            l = expr->int32->row;
-            c = expr->int32->col;
-        }
-
-        printf("(l: %u, c:%u) \"%s\"\n", l, c, v);
-    }
-        break;
-    case EK_UNOP:
-        printf("EK_UNOP\n");
-        break;
     case EK_NONE:
+        nputchar(' ', depth * 2);
         printf("EK_NONE\n");
         break;
+    case EK_VALUE_NAME:
+        __print_info(expr->value, depth);
+        break;
+    case EK_CONSTANT:
+        __print_info(expr->int32, depth);
+        break;
+    case EK_EXPR:
+        cml_print_expr(expr->expr, depth + 1);
+        break;
+    case EK_LET:
+        __print_let(expr->let, depth);
+        break;
+    case EK_UNOP:
+        nputchar(' ', depth * 2);
+        printf("EK_UNOP\n");
+        break;
+    case EK_BINOP:
+        __print_binop(expr->binop, depth);
+        break;
     }
-
-    nprintc(' ', depth * 2);
-    printf("}\n");
 }
 
 void cml_print_program(struct cml_program_node *prog)
 {
-    struct cml_instr_node instr;
+    struct cml_expr_node expr;
 
     printf("-- PROGRAM BEGIN --\n");
 
-    for (uint32_t i = 0; i < prog->instrs.len; i++)
+    for (uint32_t i = 0; i < prog->exprs.len; i++)
     {
-        bth_dynarray_get(&prog->instrs, i, &instr);
-
-        switch (instr.kind)
-        {
-        case IK_DECL: case IK_LOCAL_DECL:
-            printf("IK_DECL -> %s {\n", instr.decl.body.type);
-            cml_print_expr(&instr.decl.body, 1);
-            printf("}\n");
-            break;
-        case IK_COND:
-            printf("IK_COND\n");
-            break;
-        case IK_EXPR:
-            cml_print_expr(&instr.expr, 0);
-            break;
-        }
+        bth_dynarray_get(&prog->exprs, i, &expr);
+        cml_print_expr(&expr, 0);
     }
 
     printf("-- PROGRAM END --\n");
 }
 
-// kidS because expr can be parent of multiple instr
-void cml_free_expr_kids(struct cml_expr_node *expr)
+void cml_free_expr(struct cml_expr_node *expr)
 {
     switch (expr->kind)
     {
     case EK_NONE:
         break;
-    case EK_INT32:
+    case EK_VALUE_NAME:
+        free(expr->value);
+        break;
+    case EK_CONSTANT:
         free(expr->int32);
         break;
-    case EK_IDENT:
-        free(expr->ident);
+    case EK_EXPR:
+        cml_free_expr(expr->expr);
+        free(expr->expr);
+        break;
+    case EK_LET:
+        cml_free_expr(&expr->let->body);
+        free(expr->let);
         break;
     case EK_UNOP:
+        TODO();
         break;
     case EK_BINOP:
-        cml_free_expr_kids(expr->binop->lhs);
-        cml_free_expr_kids(expr->binop->rhs);
+        cml_free_expr(expr->binop->lhs);
+        cml_free_expr(expr->binop->rhs);
         free(expr->binop->lhs);
         free(expr->binop->rhs);
         free(expr->binop);
@@ -497,26 +490,15 @@ void cml_free_expr_kids(struct cml_expr_node *expr)
 
 void cml_free_program(struct cml_program_node *prog)
 {
-    struct cml_instr_node instr;
+    struct cml_expr_node expr;
 
-    for (uint32_t i = 0; i < prog->instrs.len; i++)
+    for (uint32_t i = 0; i < prog->exprs.len; i++)
     {
-        bth_dynarray_get(&prog->instrs, i, &instr);
-
-        switch (instr.kind)
-        {
-        case IK_DECL: case IK_LOCAL_DECL:
-            cml_free_expr_kids(&instr.decl.body);
-            break;
-        case IK_EXPR:
-            cml_free_expr_kids(&instr.expr);
-            break;
-        default:
-            break;
-        }
+        bth_dynarray_get(&prog->exprs, i, &expr);
+        cml_free_expr(&expr);
     }
 
-    free(prog->instrs.items);
+    free(prog->exprs.items);
 }
 
 void cml_free_parser(struct cml_parser *pa)
