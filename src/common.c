@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include "common.h"
 
 void escprints(char *s)
@@ -45,4 +46,10 @@ void escprints(char *s)
     }
 
     fflush(stdout);
+}
+
+void nputchar(char c, unsigned int n)
+{
+    for (uint32_t i = 0; i < n; i++)
+        putchar(c);
 }
