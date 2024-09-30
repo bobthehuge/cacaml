@@ -48,6 +48,10 @@ int main()
     
     cml_print_module(&mod);
 
+    FILE *repr = fopen("ast.dot", "w+");
+    cml_todot_module(&mod, repr);
+    fclose(repr);
+
     cml_lexer_destroy(&lex);
     cml_free_parser(&pa);
     cml_free_module(&mod);

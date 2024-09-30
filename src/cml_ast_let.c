@@ -1,23 +1,23 @@
 #include "../utils/bth_salloc.h"
 #include "cml_ast_let.h"
 
-struct cml_let_binding_node *cml_new_let_binding(void)
-{
-    return smalloc(sizeof(struct cml_let_binding_node));
-}
+// struct cml_let_binding_node *cml_new_let_binding(void)
+// {
+//     return smalloc(sizeof(struct cml_let_binding_node));
+// }
 
-void cml_print_let_binding(struct cml_let_binding_node *root, uint32_t padd)
-{
-}
+// void cml_print_let_binding(struct cml_let_binding_node *root, uint32_t padd)
+// {
+// }
 
-void cml_parse_let_binding(struct cml_parser *pa, struct cml_expr_node *root)
-{
-}
+// void cml_parse_let_binding(struct cml_parser *pa, struct cml_expr_node *root)
+// {
+// }
 
-void cml_free_let_binding(struct cml_let_binding_node *root)
-{
-    return;
-}
+// void cml_free_let_binding(struct cml_let_binding_node *root)
+// {
+//     return;
+// }
 
 struct cml_let_node *cml_new_let(void)
 {
@@ -31,6 +31,7 @@ void cml_parse_let(struct cml_parser *pa, struct cml_expr_node *root)
 
     let->binding.name.row = pa->curr.row;
     let->binding.name.col = pa->curr.col;
+    let->body.kind = EK_NONE;
 
     cml_parser_next(pa);
     if (pa->curr.kind != TK_IDENT)
@@ -73,7 +74,9 @@ void cml_print_let(struct cml_let_node *r, uint32_t depth)
     );
 
     cml_print_expr(&r->binding.body, depth + 1);
-    cml_print_expr(&r->body, depth + 1);
+
+    if (r->body.kind != EK_NONE)
+        cml_print_expr(&r->body, depth + 1);
 
     nputchar(' ', depth * 2);
     printf("}\n");
