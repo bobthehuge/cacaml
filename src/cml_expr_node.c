@@ -1,7 +1,9 @@
 #include "../utils/bth_salloc.h"
-#include "cml_ast_binop.h"
-#include "cml_ast_let.h"
-#include "cml_ast_expr.h"
+#include "cml_binop_node.h"
+#include "cml_let_node.h"
+#include "cml_expr_node.h"
+#include <cml_info_node.h>
+#include <stdio.h>
 #include "cml_parser.h"
 
 struct cml_expr_node *cml_new_expr(void)

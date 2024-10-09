@@ -1,5 +1,8 @@
 #include "../utils/bth_salloc.h"
-#include "cml_ast_let.h"
+#include "cml_let_node.h"
+#include <cml_ast.h>
+#include <cml_expr_node.h>
+#include <cml_info_node.h>
 
 // struct cml_let_binding_node *cml_new_let_binding(void)
 // {
@@ -14,10 +17,10 @@
 // {
 // }
 
-// void cml_free_let_binding(struct cml_let_binding_node *root)
-// {
-//     return;
-// }
+void cml_free_binding(struct cml_let_binding_node *root)
+{
+    cml_free_expr(&root->body);
+}
 
 struct cml_let_node *cml_new_let(void)
 {
@@ -84,5 +87,6 @@ void cml_print_let(struct cml_let_node *r, uint32_t depth)
 
 void cml_free_let(struct cml_let_node *root)
 {
-    return;
+    cml_free_binding(&root->binding);
+    cml_free_expr(&root->body);
 }

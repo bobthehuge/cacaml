@@ -1,7 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "cml_ast_module.h"
-#include "cml_ast_expr.h"
+#include "cml_module_node.h"
+#include "cml_expr_node.h"
 
 void cml_parse_module(struct cml_parser *pa, struct cml_module_node *prog)
 {
@@ -28,18 +29,6 @@ void cml_print_module(struct cml_module_node *prog)
     }
 
     printf("-- PROGRAM END --\n");
-}
-
-void cml_todot_module(struct cml_module_node *prog, FILE *file)
-{
-    struct cml_expr_node expr;
-
-    for (uint32_t i = 0; i < prog->exprs.len; i++)
-    {
-        bth_dynarray_get(&prog->exprs, i, &expr);
-        // MOD -> children[i]
-        // cml_todot_expr(children[i])
-    }
 }
 
 void cml_free_module(struct cml_module_node *mod)

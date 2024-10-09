@@ -1,6 +1,6 @@
 // #include <stdio.h>
 
-#include "cml_ast_module.h"
+#include "cml_module_node.h"
 #include "cml_lexer.h"
 #include "cml_parser.h"
 #include "cml_token.h"
@@ -47,10 +47,6 @@ int main()
     cml_parse_module(&pa, &mod);
     
     cml_print_module(&mod);
-
-    FILE *repr = fopen("ast.dot", "w+");
-    cml_todot_module(&mod, repr);
-    fclose(repr);
 
     cml_lexer_destroy(&lex);
     cml_free_parser(&pa);

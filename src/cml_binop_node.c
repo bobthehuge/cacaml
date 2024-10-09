@@ -3,8 +3,8 @@
 #include "../utils/bth_salloc.h"
 
 #include "cml_ast.h"
-#include "cml_ast_expr.h"
-#include "cml_ast_binop.h"
+#include "cml_expr_node.h"
+#include "cml_binop_node.h"
 #include "common.h"
 
 struct cml_binop_node *cml_new_binop(void)

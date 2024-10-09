@@ -2,7 +2,7 @@
 #define CML_AST_BINOP
 
 #include <stdint.h>
-#include "cml_ast_info.h"
+#include "cml_info_node.h"
 #include "cml_parser.h"
 
 struct cml_binop_node
