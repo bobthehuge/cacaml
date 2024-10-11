@@ -26,19 +26,19 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-struct pair
+struct htab_pair
 {
     uint32_t hkey;
     char *key;
     void *value;
-    struct pair *next;
+    struct htab_pair *next;
 };
 
 struct htab
 {
     size_t capacity;
     size_t size;
-    struct pair *data;
+    struct htab_pair *data;
 };
 
 uint32_t one_at_a_time(char *key);
@@ -77,14 +77,14 @@ void htab_free(struct htab *ht);
 // Return a pair of the hash table from its key.
 // (The pair is not removed from the hash table.)
 // If the pair is not in the table, return NULL.
-struct pair *htab_get(struct htab *ht, char *key);
+struct htab_pair *htab_get(struct htab *ht, char *key);
 
 
 // Finds the pair's index in the bucket list and assign
 // it to `idx_ptr` location if not NULL. 
 // Returns the found pair.
 // If the pair is not in the table, return NULL.
-struct pair *htab_find(struct htab *ht, char *key, size_t *idx_ptr);
+struct htab_pair *htab_find(struct htab *ht, char *key, size_t *idx_ptr);
 
 // Insert a pair into the hash table.
 // If the pair is already in the table, return 0.

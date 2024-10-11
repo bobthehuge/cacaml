@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdarg.h>
 #include "../utils/bth_log.h"
 
 #define ERROR(code, ...) ERR(code, __VA_ARGS__)
@@ -9,5 +10,7 @@
 
 void escprints(char *s);
 void nputchar(char c, unsigned int n);
+int myasprintf(char **str, const char *fmt, ...);
+int myvasprintf(char **str, const char *fmt, va_list args);
 
 #endif

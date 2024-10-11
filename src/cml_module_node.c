@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../utils/bth_htab.h"
 #include "cml_module_node.h"
 #include "cml_expr_node.h"
 
@@ -16,15 +17,35 @@ void cml_parse_module(struct cml_parser *pa, struct cml_module_node *prog)
     }
 }
 
-void cml_print_module(struct cml_module_node *prog)
+void cml_emit_module(struct cml_module_node *mod, FILE *file)
+{
+    struct cml_expr_node expr;
+    struct cml_ir_ctx ctx = {
+        .file = file,
+        .vtable = htab_new(),
+        .vcount = 0
+    };
+
+    fprintf(file, "function $%s() {\n@start\n", mod->name);
+
+    for (uint32_t i = 0; i < mod->exprs.len; i++)
+    {
+        bth_dynarray_get(&mod->exprs, i, &expr);
+        cml_emit_expr(&expr, &ctx);
+    }
+
+    fprintf(file, "    ret\n}\n\n");
+}
+
+void cml_print_module(struct cml_module_node *mod)
 {
     struct cml_expr_node expr;
 
     printf("-- PROGRAM BEGIN --\n");
 
-    for (uint32_t i = 0; i < prog->exprs.len; i++)
+    for (uint32_t i = 0; i < mod->exprs.len; i++)
     {
-        bth_dynarray_get(&prog->exprs, i, &expr);
+        bth_dynarray_get(&mod->exprs, i, &expr);
         cml_print_expr(&expr, 0);
     }
 

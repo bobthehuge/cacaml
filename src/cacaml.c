@@ -1,4 +1,4 @@
-// #include <stdio.h>
+#include <stdio.h>
 
 #include "cml_module_node.h"
 #include "cml_lexer.h"
@@ -13,7 +13,7 @@
 #define BTH_DYNARRAY_IMPLEMENTATION
 #include "../utils/bth_dynarray.h"
 
-int main()
+int main(int argc, char **argv)
 {
     struct cml_lexer lex;
 
@@ -43,10 +43,33 @@ int main()
 
     cml_parser_init(&pa);
 
-    struct cml_module_node mod;
+    struct cml_module_node mod = {
+        .name = "__cml_main_module",
+        .path = "",
+    };
     cml_parse_module(&pa, &mod);
+    // cml_print_module(&mod);
+
+    FILE *file = fopen("sample.ssa", "w");
+
+
+    if (file == NULL)
+        ERR(1, "Fatal IO error");
     
-    cml_print_module(&mod);
+    cml_emit_module(&mod, file);
+
+    fprintf(
+        file,
+        "export function w $main() {\n"
+        "@start\n"
+    );
+
+    fprintf(file, "    call $__cml_main_module()\n");
+    // fprintf(file, "    call $__{module_name}()\n");
+
+    fprintf(file, "    ret 0\n}");
+
+    fclose(file);
 
     cml_lexer_destroy(&lex);
     cml_free_parser(&pa);

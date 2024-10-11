@@ -1,6 +1,5 @@
 #include "../utils/bth_salloc.h"
 #include "cml_info_node.h"
-#include <cml_ast.h>
 #include "common.h"
 
 struct cml_info_node *cml_new_info(void)

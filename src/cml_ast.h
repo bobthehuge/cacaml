@@ -2,6 +2,8 @@
 #define CML_AST_H
 
 // #include "cml_parser.h"
+#include <stdio.h>
+#include "../utils/bth_htab.h"
 
 enum cml_type
 {
@@ -19,6 +21,16 @@ enum cml_ekind
     EK_LET,
     EK_UNOP,
     EK_BINOP,
+};
+
+struct cml_ir_ctx
+{
+    // destination file
+    FILE *file;
+    // used as a lookup table for variables
+    struct htab *vtable;
+    // simulates stack count evolution as we "push" values
+    size_t vcount;
 };
 
 // struct cml_unop_node

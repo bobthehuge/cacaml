@@ -65,7 +65,7 @@ void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
         }
 
         struct cml_info_node op = {
-            .value = "*",
+            .value = "mul",
         };
         
         term->op = op;
@@ -106,7 +106,7 @@ void cml_parse_binop(struct cml_parser *pa, struct cml_expr_node *expr)
     if (pa->curr.kind == TK_ADD)
     {
         struct cml_info_node op = {
-            .value = "+",
+            .value = "add",
             .row = pa->curr.row,
             .col = pa->curr.col
         };

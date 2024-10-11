@@ -68,7 +68,7 @@ struct htab *htab_init(size_t cap)
     res->capacity = cap;
     res->size = 0;
 
-    res->data = calloc(cap, sizeof(struct pair));
+    res->data = calloc(cap, sizeof(struct htab_pair));
 
     if (res->data == NULL)
     {
@@ -87,12 +87,12 @@ void htab_clear(struct htab *ht)
 {
     for (size_t i = 0; i < ht->capacity; ++i)
     {
-        struct pair *elt = ht->data[i].next;
+        struct htab_pair *elt = ht->data[i].next;
         ht->data[i].next = NULL;
 
         while (elt != NULL)
         {
-            struct pair *nxt = elt->next;
+            struct htab_pair *nxt = elt->next;
             free(elt);
             elt = nxt;
         }
@@ -108,12 +108,12 @@ void htab_free(struct htab *ht)
     free(ht);
 }
 
-struct pair *htab_get(struct htab *ht, char *key)
+struct htab_pair *htab_get(struct htab *ht, char *key)
 {
     uint32_t h = HASH(key);
     size_t idx = h % ht->capacity;
 
-    struct pair *elt = ht->data[idx].next;
+    struct htab_pair *elt = ht->data[idx].next;
 
     while (elt != NULL && strcmp(key, elt->key))
     {
@@ -123,13 +123,13 @@ struct pair *htab_get(struct htab *ht, char *key)
     return elt;
 }
 
-struct pair *htab_find(struct htab *ht, char *key, size_t *idx_ptr)
+struct htab_pair *htab_find(struct htab *ht, char *key, size_t *idx_ptr)
 {
     uint32_t h = HASH(key);
     size_t hidx = h % ht->capacity;
     size_t bidx = 0;
 
-    struct pair *elt = ht->data[hidx].next;
+    struct htab_pair *elt = ht->data[hidx].next;
 
     while (elt != NULL && strcmp(key, elt->key))
     {
@@ -148,11 +148,11 @@ void htab_expand(struct htab *ht)
 
     for (size_t i = 0; i < ht->capacity; ++i)
     {
-        struct pair *elt = ht->data[i].next;
+        struct htab_pair *elt = ht->data[i].next;
 
         while (elt != NULL)
         {
-            struct pair *nxt = elt->next;
+            struct htab_pair *nxt = elt->next;
             htab_insert(new, elt->key, elt->value);
             free(elt);
             elt = nxt;
@@ -179,7 +179,7 @@ int htab_insert(struct htab *ht, char *key, void *value)
         htab_expand(ht);
     }
 
-    struct pair *p = malloc(sizeof(struct pair));
+    struct htab_pair *p = malloc(sizeof(struct htab_pair));
 
     if (ht->data[idx].next == NULL)
     {
@@ -201,7 +201,7 @@ void htab_remove(struct htab *ht, char *key)
     uint32_t h = HASH(key);
     size_t idx = h % ht->capacity;
 
-    struct pair *elt = ht->data + idx;
+    struct htab_pair *elt = ht->data + idx;
 
     if (elt == NULL)
     {
@@ -215,7 +215,7 @@ void htab_remove(struct htab *ht, char *key)
 
     if (elt->next != NULL)
     {
-        struct pair *tofree = elt->next;
+        struct htab_pair *tofree = elt->next;
         elt->next = elt->next->next;
 
         free(tofree);
