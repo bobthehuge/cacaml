@@ -135,20 +135,20 @@ void cml_parse_binop(struct cml_parser *pa, struct cml_expr_node *expr)
     }
 }
 
-void cml_print_binop(struct cml_binop_node *binop, uint32_t depth)
+void cml_print_binop(struct cml_binop_node *root, uint32_t padd, FILE *file)
 {
-    const char *v = binop->op.value;
-    uint32_t l = binop->op.row;
-    uint32_t c = binop->op.col;
+    const char *v = root->op.value;
+    uint32_t l = root->op.row;
+    uint32_t c = root->op.col;
     
-    nputchar(' ', depth * 2);
-    printf("EK_BINOP: (%u, %u) \"%s\" {\n", l, c, v);
+    nputchar(file, ' ', padd * 2);
+    fprintf(file, "EK_BINOP: (%u, %u) \"%s\" {\n", l, c, v);
 
-    cml_print_expr(binop->lhs, depth + 1);
-    cml_print_expr(binop->rhs, depth + 1);
+    cml_print_expr(root->lhs, padd + 1, file);
+    cml_print_expr(root->rhs, padd + 1, file);
 
-    nputchar(' ', depth * 2);
-    printf("}\n");
+    nputchar(file, ' ', padd * 2);
+    fprintf(file, "}\n");
 }
 
 void cml_free_binop(struct cml_binop_node *root)

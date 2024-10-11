@@ -2,8 +2,6 @@
 #define CML_AST_EXPR_H
 
 #include <stdint.h>
-#define _GNU_SOURCE
-#include <stdio.h>
 #include "cml_ast.h"
 #include "cml_parser.h"
 
@@ -24,7 +22,7 @@ struct cml_expr_node
 struct cml_expr_node *cml_new_expr(void);
 void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *expr);
 void cml_emit_expr(struct cml_expr_node *expr, struct cml_ir_ctx *ctx);
-void cml_print_expr(struct cml_expr_node *expr, uint32_t depth);
+void cml_print_expr(struct cml_expr_node *expr, uint32_t depth, FILE *file);
 void cml_free_expr(struct cml_expr_node *expr);
 
 #endif

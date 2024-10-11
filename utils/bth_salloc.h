@@ -42,6 +42,16 @@ void *smalloc(size_t size)
     return d;
 }
 
+void *srealloc(void *ptr, size_t size)
+{
+    void *d = realloc(ptr, size);
+
+    if (!d && !size)
+        err(1, "Cannot realloc of size %zu", size);
+
+    return d;
+}
+
 // TODO: Add calloc and realloc
 
 #endif /* ! */

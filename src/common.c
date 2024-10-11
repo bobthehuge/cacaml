@@ -49,10 +49,10 @@ void escprints(char *s)
     fflush(stdout);
 }
 
-void nputchar(char c, unsigned int n)
+void nputchar(FILE *file, char c, unsigned int n)
 {
     for (uint32_t i = 0; i < n; i++)
-        putchar(c);
+        fputc(c, file);
 }
 
 // not my work, see:

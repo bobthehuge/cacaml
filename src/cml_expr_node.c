@@ -126,32 +126,32 @@ void cml_emit_expr(struct cml_expr_node *expr, struct cml_ir_ctx *ctx)
     }
 }
 
-void cml_print_expr(struct cml_expr_node *expr, uint32_t depth)
+void cml_print_expr(struct cml_expr_node *expr, uint32_t depth, FILE *file)
 {
     switch (expr->kind)
     {
     case EK_NONE:
-        nputchar(' ', depth * 2);
+        nputchar(file, ' ', depth * 2);
         printf("EK_NONE\n");
         break;
     case EK_VALUE_NAME:
-        cml_print_info(expr->value, depth);
+        cml_print_info(expr->value, depth, file);
         break;
     case EK_CONSTANT:
-        cml_print_info(expr->int32, depth);
+        cml_print_info(expr->int32, depth, file);
         break;
     case EK_EXPR:
-        cml_print_expr(expr->expr, depth + 1);
+        cml_print_expr(expr->expr, depth + 1, file);
         break;
     case EK_LET:
-        cml_print_let(expr->let, depth);
+        cml_print_let(expr->let, depth, file);
         break;
     case EK_UNOP:
-        nputchar(' ', depth * 2);
+        nputchar(file, ' ', depth * 2);
         printf("EK_UNOP\n");
         break;
     case EK_BINOP:
-        cml_print_binop(expr->binop, depth);
+        cml_print_binop(expr->binop, depth, file);
         break;
     }
 }

@@ -37,19 +37,17 @@ void cml_emit_module(struct cml_module_node *mod, FILE *file)
     fprintf(file, "    ret\n}\n\n");
 }
 
-void cml_print_module(struct cml_module_node *mod)
+void cml_print_module(struct cml_module_node *mod, FILE *file)
 {
     struct cml_expr_node expr;
 
-    printf("-- PROGRAM BEGIN --\n");
-
+    fprintf(file, "MODULE %s {\n", mod->name);
     for (uint32_t i = 0; i < mod->exprs.len; i++)
     {
         bth_dynarray_get(&mod->exprs, i, &expr);
-        cml_print_expr(&expr, 0);
+        cml_print_expr(&expr, 1, file);
     }
-
-    printf("-- PROGRAM END --\n");
+    fprintf(file, "}\n");
 }
 
 void cml_free_module(struct cml_module_node *mod)

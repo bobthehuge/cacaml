@@ -64,11 +64,12 @@ void cml_parse_let(struct cml_parser *pa, struct cml_expr_node *root)
     root->let = let;
 }
 
-void cml_print_let(struct cml_let_node *r, uint32_t depth)
+void cml_print_let(struct cml_let_node *r, uint32_t padd, FILE *file)
 {
-    nputchar(' ', depth * 2);
+    nputchar(file, ' ', padd * 2);
     
-    printf(
+    fprintf(
+        file,
         "EK_LET: (%u, %u) \"%s\" -> %s {\n",
         r->binding.name.row,
         r->binding.name.col,
@@ -76,13 +77,13 @@ void cml_print_let(struct cml_let_node *r, uint32_t depth)
         r->binding.body.type
     );
 
-    cml_print_expr(&r->binding.body, depth + 1);
+    cml_print_expr(&r->binding.body, padd + 1, file);
 
     if (r->body.kind != EK_NONE)
-        cml_print_expr(&r->body, depth + 1);
+        cml_print_expr(&r->body, padd + 1, file);
 
-    nputchar(' ', depth * 2);
-    printf("}\n");
+    nputchar(file, ' ', padd * 2);
+    fprintf(file, "}\n");
 }
 
 void cml_free_let(struct cml_let_node *root)

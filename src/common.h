@@ -9,7 +9,7 @@
 #define CSTRNCMP(s1, s2) strncmp((s1), (s2).data, s2.len)
 
 void escprints(char *s);
-void nputchar(char c, unsigned int n);
+void nputchar(FILE *file, char c, unsigned int n);
 int myasprintf(char **str, const char *fmt, ...);
 int myvasprintf(char **str, const char *fmt, va_list args);
 

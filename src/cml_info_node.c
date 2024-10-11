@@ -12,8 +12,8 @@ struct cml_info_node *cml_new_info(void)
 //     return;
 // }
 
-void cml_print_info(struct cml_info_node *r, uint32_t padd)
+void cml_print_info(struct cml_info_node *r, uint32_t padd, FILE *file)
 {
-    nputchar(' ', padd * 2);
-    printf("EK_INFO: (%u, %u) \"%s\"\n", r->row, r->col, r->value);
+    nputchar(file, ' ', padd * 2);
+    fprintf(file, "EK_INFO: (%u, %u) \"%s\"\n", r->row, r->col, r->value);
 }
