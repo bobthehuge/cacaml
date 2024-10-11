@@ -5,6 +5,8 @@ LDLIBS =
 
 SRC = `find . ../utils -name '*.c'`
 OBJ = `find . ../utils -name '*.o'`
+SSA = `find . -name '*.ssa'`
+ASM = `find . -name '*.asm'`
 EXE = cacaml
 
 all: setrel compile
@@ -29,6 +31,8 @@ setrel:
 
 mop:
 	$(RM) $(OBJ)
+	$(RM) $(SSA)
+	$(RM) $(ASM)
 
 clean: mop
 	$(RM) $(EXE)
