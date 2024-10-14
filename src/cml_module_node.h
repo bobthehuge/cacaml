@@ -1,5 +1,5 @@
-#ifndef CML_AST_MODULE_H
-#define CML_AST_MODULE_H
+#ifndef CML_MODULE_NODE_H
+#define CML_MODULE_NODE_H
 
 #include <stdio.h>
 #include "../utils/bth_dynarray.h"

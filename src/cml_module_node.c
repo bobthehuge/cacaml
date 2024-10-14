@@ -35,6 +35,8 @@ void cml_emit_module(struct cml_module_node *mod, FILE *file)
     }
 
     fprintf(file, "    ret\n}\n\n");
+
+    cml_free_vtable(ctx.vtable);
 }
 
 void cml_print_module(struct cml_module_node *mod, FILE *file)

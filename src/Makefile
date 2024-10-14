@@ -9,19 +9,18 @@ SSA = `find . -name '*.ssa'`
 ASM = `find . -name '*.asm'`
 EXE = cacaml
 
-all: setrel compile
+all: setrel comp
 
-compile:
+comp:
 	$(CC) -o $(EXE) $(CFLAGS) $(SRC)
-rel: setrel compile
-dev: setdev compile
+rel: setrel comp
+dev: setdev comp
 run:
 	./$(EXE)
 gdb: dev
 	gdb ./$(EXE)
 memcheck: dev
-	valgrind --leak-check=full -s ./$(EXE)
-
+	valgrind --leak-check=full -s ./$(EXE) ../sample.ml
 setdev:
 	$(eval CFLAGS := $(CDEVFLAGS))
 setrel:

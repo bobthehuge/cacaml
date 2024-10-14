@@ -21,6 +21,7 @@ enum cml_ekind
     EK_LET,
     EK_UNOP,
     EK_BINOP,
+    EK_COND,
 };
 
 struct cml_ir_ctx

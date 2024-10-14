@@ -40,8 +40,9 @@ void cml_parse_factor(struct cml_parser *pa, struct cml_expr_node *fact)
     cml_parser_next(pa);
 }
 
-void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
+void cml_parse_term(struct cml_parser *pa, struct cml_expr_node *term)
 {
+    term->binop = cml_new_binop();
     struct cml_expr_node *lhs = cml_new_expr();
     cml_parse_factor(pa, lhs);
 
@@ -51,8 +52,8 @@ void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
         cml_parser_next(pa); // rhs Expr
 
         struct cml_expr_node *rhs = cml_new_expr();
-        rhs->binop = cml_new_binop();
-        cml_parse_term(pa, rhs->binop);
+        // rhs->binop = cml_new_binop();
+        cml_parse_term(pa, rhs);
 
         if (rhs->binop->op.value != NULL)
             rhs->kind = EK_BINOP;
@@ -68,14 +69,15 @@ void cml_parse_term(struct cml_parser *pa, struct cml_binop_node *term)
             .value = "mul",
         };
         
-        term->op = op;
-        term->lhs = lhs;
-        term->rhs = rhs;
+        term->type = lhs->type != NULL ? lhs->type : rhs->type;
+        term->binop->op = op;
+        term->binop->lhs = lhs;
+        term->binop->rhs = rhs;
     }
     else
     {
-        term->op.value = NULL;
-        term->lhs = lhs;
+        term->binop->op.value = NULL;
+        term->binop->lhs = lhs;
     }
 }
 
@@ -89,8 +91,8 @@ void cml_parse_binop(struct cml_parser *pa, struct cml_expr_node *expr)
 
     struct cml_expr_node *lhs = cml_new_expr();
     lhs->type = cml_type2str(UNRESOLVED);
-    lhs->binop = cml_new_binop();
-    cml_parse_term(pa, lhs->binop);
+    // lhs->binop = cml_new_binop();
+    cml_parse_term(pa, lhs);
 
     if (lhs->binop->op.value != NULL)
         lhs->kind = EK_BINOP;

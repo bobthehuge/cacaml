@@ -1,9 +1,9 @@
-#ifndef CML_AST_INFO
-#define CML_AST_INFO
+#ifndef CML_INFO_NODE_H
+#define CML_INFO_NODE_H
 
 #include <stdint.h>
-#include "cml_parser.h"
 #include "cml_expr_node.h"
+#include "cml_parser.h"
 
 struct cml_info_node
 {

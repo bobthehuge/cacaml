@@ -1,5 +1,5 @@
-#ifndef CML_AST_EXPR_H
-#define CML_AST_EXPR_H
+#ifndef CML_EXPR_NODE_H
+#define CML_EXPR_NODE_H
 
 #include <stdint.h>
 #include "cml_ast.h"
@@ -16,6 +16,7 @@ struct cml_expr_node
         struct cml_let_node *let;
         // struct cml_unop_node unop;
         struct cml_binop_node *binop;
+        struct cml_cond_node *cond;
     };
 };
 

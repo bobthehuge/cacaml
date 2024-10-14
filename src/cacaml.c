@@ -31,19 +31,16 @@ void print_usage(char **argv)
     fprintf(stderr, "\t%-11s file output file\n", "-o");
     fprintf(stderr, "\t%-11s output produced Tokens\n", "-T");
     fprintf(stderr, "\t%-11s output produced AST\n", "-P");
-    fprintf(stderr, "\t%-11s lex, parse and output IR (.ssa)\n", "-E");
-    fprintf(stderr, "\t%-11s -E and assembles but doesn't link\n\n", "-A");
 }
 
 int main(int argc, char **argv)
 {
     int c;
     FILE *outf = stdout;
-    FILE *inf;
     char *f;
     char flags = 0;
 
-    while ((c = getopt(argc, argv, "hTPEAo:")) != -1)
+    while ((c = getopt(argc, argv, "hTPo:")) != -1)
     {
         switch (c)
         {
@@ -67,14 +64,6 @@ int main(int argc, char **argv)
         // parse only
         case 'P':
             flags |= AST_MASK;
-            break;
-        // parse and emit IR (.ssa file)
-        case 'E':
-            flags |= SSA_MASK;
-            break;
-        // parse, emit and assemble (qbe required)
-        case 'A':
-            flags |= ASM_MASK;
             break;
         case 'h':
         /* FALLTHROUGH */
@@ -152,43 +141,6 @@ int main(int argc, char **argv)
 
         fprintf(outf, "    ret 0\n}\n");
         fclose(outf);
-    }
-
-	if (!(flags & (TOK_MASK | AST_MASK | SSA_MASK)))
-	{
-        int old[2] = {dup(0), dup(1)};
-        int new[2];
-        dup2(new[0], 0);
-        dup2(new[1], 1);
-
-        char *com[] = {
-            "cc",
-            "cc",
-            "",
-            "NULL"
-        };
-	    
-	    int pid = fork();
-
-        if (pid < 0)
-            ERR(1, "Failed to fork");
-
-        if (pid == 0)
-        {
-            // printf("");
-            if (execvp(com[0], com) < 0)
-            {
-                ERR(1, "Failed to assemble");
-            }
-        }
-        else
-        {
-            wait(NULL);
-            dup2(old[0], 0);
-            dup2(old[1], 1);
-            close(old[0]);
-            close(old[1]);
-        }
     }
 
     cml_lexer_destroy(&lex);

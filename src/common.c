@@ -105,3 +105,23 @@ int myvasprintf(char **str, const char *fmt, va_list args)
     size = vsprintf(*str, fmt, args);
     return size;
 }
+
+void cml_free_vtable(struct htab *ht)
+{
+    for (size_t i = 0; i < ht->capacity; ++i)
+    {
+        struct htab_pair *elt = ht->data[i].next;
+        ht->data[i].next = NULL;
+
+        while (elt != NULL)
+        {
+            struct htab_pair *nxt = elt->next;
+            free(elt->value);
+            free(elt);
+            elt = nxt;
+        }
+    }
+
+    free(ht->data);
+    free(ht);
+}

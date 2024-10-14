@@ -1,5 +1,5 @@
-#ifndef CML_AST_DEF_H
-#define CML_AST_DEF_H
+#ifndef CML_DEF_NODE_H
+#define CML_DEF_NODE_H
 
 #include "cml_let_node.h"
 

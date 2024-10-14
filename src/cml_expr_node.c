@@ -1,8 +1,10 @@
+#include <cml_token.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "../utils/bth_salloc.h"
 #include "cml_binop_node.h"
+#include "cml_cond_node.h"
 #include "cml_let_node.h"
 #include "cml_expr_node.h"
 #include "cml_ast.h"
@@ -27,6 +29,10 @@ void cml_parse_expr(struct cml_parser *pa, struct cml_expr_node *r)
         if (pa->curr.kind == TK_IDENT || pa->curr.kind == TK_INT32)
         {
             cml_parse_factor(pa, r);
+        }
+        else if (pa->curr.kind == TK_IF)
+        {
+            cml_parse_cond(pa, r);
         }
         else if (pa->curr.kind == TK_LET)
         {
@@ -153,6 +159,9 @@ void cml_print_expr(struct cml_expr_node *expr, uint32_t depth, FILE *file)
     case EK_BINOP:
         cml_print_binop(expr->binop, depth, file);
         break;
+    case EK_COND:
+        cml_print_cond(expr->cond, depth, file);
+        break;
     }
 }
 
@@ -174,9 +183,7 @@ void cml_free_expr(struct cml_expr_node *expr)
         break;
     case EK_LET:
         cml_free_expr(&expr->let->binding.body);
-
         cml_free_expr(&expr->let->body);
-        
         free(expr->let);
         break;
     case EK_UNOP:
@@ -188,6 +195,12 @@ void cml_free_expr(struct cml_expr_node *expr)
         free(expr->binop->lhs);
         free(expr->binop->rhs);
         free(expr->binop);
+        break;
+    case EK_COND:
+        cml_free_expr(&expr->cond->pred);
+        cml_free_expr(&expr->cond->b_then);
+        cml_free_expr(&expr->cond->b_else);
+        free(expr->cond);
         break;
     }
 }
